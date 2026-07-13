@@ -73,21 +73,25 @@ def format_message(info):
     return ' | '.join(lines)
 
 def push_to_wechat(msg):
-    import os, requests
-    token = os.environ.get('PUSHPLUS_TOKEN')
-    if not token:
-        print('[通知] 未设置 PUSHPLUS_TOKEN，仅输出到控制台')
+    import os, smtplib
+    from email.mime.text import MIMEText
+    user = os.environ.get('SMTP_USER')
+    pwd = os.environ.get('SMTP_PASS')
+    if not user or not pwd:
+        print('[通知] 未设置 SMTP_USER/SMTP_PASS，仅输出到控制台')
         return
     try:
-        r = requests.post('http://www.pushplus.plus/send', json={
-            'token': token,
-            'title': 'E36到站提醒',
-            'content': msg,
-            'template': 'txt',
-        }, timeout=10)
-        print(f'[通知] 已推送到微信: {r.text[:80]}')
+        m = MIMEText(msg, 'plain', 'utf-8')
+        m['Subject'] = 'E36到站提醒'
+        m['From'] = user
+        m['To'] = user
+        s = smtplib.SMTP_SSL('smtp.qq.com', 465)
+        s.login(user, pwd)
+        s.send_message(m)
+        s.quit()
+        print('[通知] 已发送邮件到QQ邮箱')
     except Exception as e:
-        print(f'[通知] 推送失败: {e}')
+        print(f'[通知] 发送失败: {e}')
 
 if __name__ == '__main__':
     info = get_arrival_info()
