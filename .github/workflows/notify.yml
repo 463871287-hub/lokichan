@@ -15,4 +15,5 @@ jobs:
       - run: pip install requests pycryptodome
       - run: python e36_notify.py
         env:
-          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
