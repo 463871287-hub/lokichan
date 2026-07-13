@@ -51,26 +51,34 @@ def get_arrival_info():
 
 def format_message(info):
     buses = info['approaching']
-    tip = info.get('tip', {})
+    top = buses[:2]
 
-    if not buses:
-        return 'E36 (龙华→南山) 招商澜园 | 当前无即将到站的车辆'
+    if not top:
+        return 'E36 招商澜园方向 | 当前无即将到站的车辆'
 
-    lines = ['E36 (龙华→南山) → 招商澜园']
-    for b in buses:
-        parts = [f'{b["bus_id"]}']
-        if b['arrival_time']:
-            parts.append(f'预计 {b["arrival_time"]} 到')
-        elif b['travel_time'] > 0:
-            mins = b['travel_time'] // 60
-            parts.append(f'约 {mins} 分钟')
-        if b['stops_away'] > 0:
-            parts.append(f'还有 {b["stops_away"]} 站')
-        if b['distance'] > 0 and b['distance'] < 50000:
-            parts.append(f'距本站 {b["distance"]//1000}.{b["distance"]%1000//100}km')
-        lines.append('  '.join(parts))
+    def fmt_time(t):
+        return t.replace(':', '：') if t else ''
 
-    return ' | '.join(lines)
+    def min_text(sec):
+        m = sec // 60
+        return f'{m}分钟' if m > 0 else '即将到站'
+
+    cur = top[0]
+    parts = [f'E36最近车次{fmt_time(cur["arrival_time"])}到']
+    parts.append(f'还有{min_text(cur["travel_time"])}')
+    if cur['stops_away'] > 0:
+        parts.append(f'还有{cur["stops_away"]}站')
+    lines = ['，'.join(parts) + '。']
+
+    if len(top) > 1:
+        nxt = top[1]
+        parts = [f'下一辆车{fmt_time(nxt["arrival_time"])}到']
+        parts.append(f'还有{min_text(nxt["travel_time"])}')
+        if nxt['stops_away'] > 0:
+            parts.append(f'还有{nxt["stops_away"]}站')
+        lines.append('，'.join(parts) + '。')
+
+    return '\n'.join(lines)
 
 def push_to_wechat(msg):
     import os, smtplib
