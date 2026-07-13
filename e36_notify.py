@@ -18,6 +18,17 @@ def get_arrival_info():
         'cshow': 'busDetail',
     })
 
+    # 获取线路站点列表 → 站点名映射
+    line = api_get('/bus/line!encryptedLineDetail.action', {
+        'lineId': '0755-07940-1',
+        'cityId': '014',
+        'grey_city': 0,
+        'cshow': 'busDetail',
+        'permission': 0,
+    })
+    stations = line.get('stations', line.get('stns', []))
+    order_to_stn = {s['order']: s['sn'] for s in stations}
+
     buses = r.get('buses', [])
     approaching = []
 
@@ -41,6 +52,7 @@ def get_arrival_info():
             'arrival_time': recomm_tip,
             'travel_time': travel_time,
             'stops_away': 13 - order,
+            'station_name': order_to_stn.get(order, ''),
         })
 
     approaching.sort(key=lambda x: x['distance'])
@@ -63,20 +75,15 @@ def format_message(info):
         m = sec // 60
         return f'{m}分钟' if m > 0 else '即将到站'
 
+    def stn_label(b):
+        return b['station_name'] or f'第{b["order"]}站'
+
     cur = top[0]
-    parts = [f'E36最近车次{fmt_time(cur["arrival_time"])}到']
-    parts.append(f'还有{min_text(cur["travel_time"])}')
-    if cur['stops_away'] > 0:
-        parts.append(f'还有{cur["stops_away"]}站')
-    lines = ['，'.join(parts) + '。']
+    lines = [f'E36最近车次{fmt_time(cur["arrival_time"])}到，还有{min_text(cur["travel_time"])}，还有{cur["stops_away"]}站，目前{stn_label(cur)}。']
 
     if len(top) > 1:
         nxt = top[1]
-        parts = [f'下一辆车{fmt_time(nxt["arrival_time"])}到']
-        parts.append(f'还有{min_text(nxt["travel_time"])}')
-        if nxt['stops_away'] > 0:
-            parts.append(f'还有{nxt["stops_away"]}站')
-        lines.append('，'.join(parts) + '。')
+        lines.append(f'下一辆车{fmt_time(nxt["arrival_time"])}到，还有{min_text(nxt["travel_time"])}，还有{nxt["stops_away"]}站，目前{stn_label(nxt)}。')
 
     return '\n'.join(lines)
 
@@ -85,15 +92,9 @@ def make_subject(info):
     if not buses:
         return 'E36暂无到站信息'
     b = buses[0]
-    mins = b['travel_time'] // 60
-    stops = b['stops_away']
-    if mins > 0 and stops > 0:
-        return f'E36车{mins}分后到，剩{stops}站'
-    if mins > 0:
-        return f'E36车{mins}分后到'
-    if stops > 0:
-        return f'E36剩{stops}站'
-    return 'E36即将到站'
+    stn = b['station_name'] or f'第{b["order"]}站'
+    t = b['arrival_time'] or f'{b["travel_time"]//60}分'
+    return f'E36【{t}到，余{b["travel_time"]//60}分钟，剩{b["stops_away"]}站，目前{stn}】'
 
 def push_to_wechat(msg, subject):
     import os, smtplib
