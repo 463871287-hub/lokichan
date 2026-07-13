@@ -101,19 +101,21 @@ def push_to_wechat(msg, subject):
     from email.mime.text import MIMEText
     user = os.environ.get('SMTP_USER')
     pwd = os.environ.get('SMTP_PASS')
-    if not user or not pwd:
-        print('[通知] 未设置 SMTP_USER/SMTP_PASS，仅输出到控制台')
+    to_raw = os.environ.get('SMTP_TO', user)
+    to_list = [x.strip() for x in to_raw.split(',') if x.strip()]
+    if not user or not pwd or not to_list:
+        print('[通知] 未设置 SMTP_USER/SMTP_PASS/SMTP_TO，仅输出到控制台')
         return
     try:
         m = MIMEText(msg, 'plain', 'utf-8')
         m['Subject'] = subject
         m['From'] = user
-        m['To'] = user
+        m['To'] = ', '.join(to_list)
         s = smtplib.SMTP_SSL('smtp.qq.com', 465)
         s.login(user, pwd)
-        s.send_message(m)
+        s.sendmail(user, to_list, m.as_string())
         s.quit()
-        print('[通知] 已发送邮件到QQ邮箱')
+        print(f'[通知] 已发送邮件到 {", ".join(to_list)}')
     except Exception as e:
         print(f'[通知] 发送失败: {e}')
 
