@@ -73,15 +73,19 @@ def format_message(info):
     return ' | '.join(lines)
 
 def push_to_wechat(msg):
-    import os, urllib.request, urllib.parse
+    import os, requests
     token = os.environ.get('PUSHPLUS_TOKEN')
     if not token:
         print('[通知] 未设置 PUSHPLUS_TOKEN，仅输出到控制台')
         return
-    url = f"http://www.pushplus.plus/send?token={token}&title=E36到站提醒&content={urllib.parse.quote(msg)}&template=txt"
     try:
-        urllib.request.urlopen(url, timeout=10)
-        print('[通知] 已推送到微信')
+        r = requests.post('http://www.pushplus.plus/send', json={
+            'token': token,
+            'title': 'E36到站提醒',
+            'content': msg,
+            'template': 'txt',
+        }, timeout=10)
+        print(f'[通知] 已推送到微信: {r.text[:80]}')
     except Exception as e:
         print(f'[通知] 推送失败: {e}')
 
