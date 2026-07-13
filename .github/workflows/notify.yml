@@ -1,7 +1,7 @@
 name: Notify E36 Bus
 on:
   schedule:
-    - cron: '30 22 * * *'
+    - cron: '21 6 * * *'
   workflow_dispatch:
 
 jobs:
