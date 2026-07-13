@@ -90,11 +90,11 @@ def format_message(info):
 def make_subject(info):
     buses = info['approaching']
     if not buses:
-        return 'E36暂无到站信息'
+        return 'E36|暂无信息|'
     b = buses[0]
-    stn = b['station_name'] or f'第{b["order"]}站'
+    stn = b['station_name'] or f'{b["order"]}'
     t = b['arrival_time'] or f'{b["travel_time"]//60}分'
-    return f'E36【{t}到，余{b["travel_time"]//60}分钟，剩{b["stops_away"]}站，目前{stn}】'
+    return f'E36|{t}|{b["travel_time"]//60}Min|{b["stops_away"]}站|{stn}|'
 
 def push_to_wechat(msg, subject):
     import os, smtplib
