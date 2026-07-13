@@ -80,7 +80,22 @@ def format_message(info):
 
     return '\n'.join(lines)
 
-def push_to_wechat(msg):
+def make_subject(info):
+    buses = info['approaching']
+    if not buses:
+        return 'E36暂无到站信息'
+    b = buses[0]
+    mins = b['travel_time'] // 60
+    stops = b['stops_away']
+    if mins > 0 and stops > 0:
+        return f'E36车{mins}分后到，剩{stops}站'
+    if mins > 0:
+        return f'E36车{mins}分后到'
+    if stops > 0:
+        return f'E36剩{stops}站'
+    return 'E36即将到站'
+
+def push_to_wechat(msg, subject):
     import os, smtplib
     from email.mime.text import MIMEText
     user = os.environ.get('SMTP_USER')
@@ -90,7 +105,7 @@ def push_to_wechat(msg):
         return
     try:
         m = MIMEText(msg, 'plain', 'utf-8')
-        m['Subject'] = 'E36到站提醒'
+        m['Subject'] = subject
         m['From'] = user
         m['To'] = user
         s = smtplib.SMTP_SSL('smtp.qq.com', 465)
@@ -104,5 +119,7 @@ def push_to_wechat(msg):
 if __name__ == '__main__':
     info = get_arrival_info()
     msg = format_message(info)
+    subject = make_subject(info)
+    print(subject)
     print(msg)
-    push_to_wechat(msg)
+    push_to_wechat(msg, subject)
