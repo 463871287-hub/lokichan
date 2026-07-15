@@ -89,12 +89,16 @@ def format_message(info):
 
 def make_subject(info):
     buses = info['approaching']
-    if not buses:
-        return 'E36||||'
-    b = buses[0]
-    t = b['arrival_time'] or f'{b["travel_time"]//60}分'
-    stn = b['station_name'] or ''
-    return f'E36|{t}到|剩{b["travel_time"]//60}分|余{b["stops_away"]}站|{stn}|'
+    top = buses[:2]
+    if not top:
+        return '无车'
+    labels = ['①', '②']
+    parts = []
+    for i, b in enumerate(top):
+        t = b['arrival_time'] or f'{b["travel_time"]//60}分'
+        minutes = f'{b["travel_time"]//60}分' if b['travel_time'] > 0 else '即将到站'
+        parts.append(f'{labels[i]},{t},{minutes},{b["stops_away"]}站')
+    return '|'.join(parts)
 
 def push_to_wechat(msg, subject):
     import os, smtplib
