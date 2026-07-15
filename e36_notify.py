@@ -92,12 +92,12 @@ def make_subject(info):
     top = buses[:2]
     if not top:
         return '无车'
-    labels = ['①', '②']
+    labels = ['➊', '➋']
     parts = []
     for i, b in enumerate(top):
         t = b['arrival_time'] or f'{b["travel_time"]//60}分'
         minutes = f'{b["travel_time"]//60}分' if b['travel_time'] > 0 else '即将到站'
-        parts.append(f'[{labels[i]}{t}|{minutes}|{b["stops_away"]}站]')
+        parts.append(f'{labels[i]} {t}-{minutes}-{b["stops_away"]}站')
     return '\n'.join(parts)
 
 def push_to_wechat(msg, subject):
