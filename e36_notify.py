@@ -97,8 +97,8 @@ def make_subject(info):
     for i, b in enumerate(top):
         t = b['arrival_time'] or f'{b["travel_time"]//60}分'
         minutes = f'{b["travel_time"]//60}分' if b['travel_time'] > 0 else '即将到站'
-        parts.append(f'{labels[i]},{t},{minutes},{b["stops_away"]}站')
-    return '|'.join(parts)
+        parts.append(f'[{labels[i]}{t}|{minutes}|{b["stops_away"]}站]')
+    return '\n'.join(parts)
 
 def push_to_wechat(msg, subject):
     import os, smtplib
@@ -130,3 +130,4 @@ if __name__ == '__main__':
     print(subject)
     print(msg)
     push_to_wechat(msg, subject)
+
